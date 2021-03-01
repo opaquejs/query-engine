@@ -1,5 +1,4 @@
-import { OpaqueAttributes } from "@opaquejs/opaque/lib/contracts/ModelContracts";
-import { ComparisonTypes, NormalizedQuery, NormalizedSubQuery } from "@opaquejs/query";
+import { ComparisonTypes, NormalizedQuery, NormalizedSubQuery, Queryable } from "@opaquejs/query";
 
 export type ComparisonFunctions<Value> = {
   [P in keyof ComparisonTypes<Value>]: (right: ComparisonTypes<Value>[P]) => boolean;
@@ -24,7 +23,7 @@ export const matchesComparison = <Value, C extends ComparisonTypes<Value>, PC ex
   return (comparisonFunctions(left) as any)[comparison](right) as boolean;
 };
 
-export const matchesQuery = (subject: OpaqueAttributes, query: NormalizedSubQuery): boolean => {
+export const matchesQuery = (subject: Queryable, query: NormalizedSubQuery): boolean => {
   if ("key" in query) {
     return matchesComparison(subject[query.key], query.comparator, query.value);
   }
@@ -38,7 +37,7 @@ export const matchesQuery = (subject: OpaqueAttributes, query: NormalizedSubQuer
   return true;
 };
 
-export const queryCollection = (subjects: OpaqueAttributes[], query: NormalizedQuery) => {
+export const queryCollection = (subjects: Queryable[], query: NormalizedQuery) => {
   return subjects
     .filter((subject) => matchesQuery(subject, query))
     .slice(query._skip != undefined ? Math.max(query._skip, 0) : 0)
