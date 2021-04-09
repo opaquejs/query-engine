@@ -1,6 +1,9 @@
 import { NormalizedQuery } from "@opaquejs/query";
 import { runAsTest } from "@opaquejs/testing";
 import { matchesQuery, queryCollection } from "..";
+import { Comparator } from "../Comparator";
+import { Comparators } from "../contracts/Comparator";
+import { QueryEngine } from "../QueryEngine";
 
 @runAsTest()
 export class Querying {
@@ -83,5 +86,47 @@ export class Querying {
       { lel: "hallo1" },
       { lel: "hallo2" },
     ]);
+  }
+  queryWithDatetimeComparisons() {
+    class DateComparator extends Comparator<Date> {
+      constructor(left: unknown) {
+        super(DateComparator.parseDate(left));
+      }
+
+      static parseDate(value: unknown) {
+        if (typeof value != "string") {
+          throw new Error(`A date value must be given as a string, received value [${value}] in date comparison`);
+        }
+        return new Date(value);
+      }
+
+      compare(comparison: Comparators, right: unknown) {
+        return super.compare(comparison, DateComparator.parseDate(right));
+      }
+    }
+    const engine = new QueryEngine({ createdAt: (value) => new DateComparator(value) });
+
+    // Works normal
+    expect(() => engine.matchesQuery({ number: 1 }, { key: "number", comparator: "==", value: 2 })).not.toThrow();
+
+    // wrong date input
+    expect(() =>
+      engine.matchesQuery({ createdAt: {} }, { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" })
+    ).toThrow();
+
+    // Correct
+    expect(
+      engine.matchesQuery(
+        { createdAt: "2021-04-09T22:28:29.954Z" },
+        { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" }
+      )
+    ).toBe(true);
+    // Incorrect
+    expect(
+      engine.matchesQuery(
+        { createdAt: "2021-03-09T22:28:29.954Z" },
+        { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" }
+      )
+    ).toBe(false);
   }
 }
