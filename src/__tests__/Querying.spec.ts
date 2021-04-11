@@ -1,9 +1,8 @@
 import { NormalizedQuery } from "@opaquejs/query";
 import { runAsTest } from "@opaquejs/testing";
-import { matchesQuery, queryCollection } from "..";
+import { matchesQuery, queryCollection, QueryEngine } from "..";
 import { Comparator } from "../Comparator";
 import { Comparators } from "../contracts/Comparator";
-import { QueryEngine } from "../QueryEngine";
 
 @runAsTest()
 export class Querying {

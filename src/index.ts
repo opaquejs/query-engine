@@ -1,6 +1,8 @@
 import { NormalizedQuery, NormalizedSubQuery, Queryable } from "@opaquejs/query";
 import { QueryEngine } from "./QueryEngine";
 
+export { QueryEngine };
+
 export const defaultQueryEngine = new QueryEngine();
 
 export const matchesQuery = (subject: Queryable, query: NormalizedSubQuery): boolean =>
