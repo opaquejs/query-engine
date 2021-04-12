@@ -12,9 +12,6 @@
         "ts-jest": "^26.5.1",
         "typescript": "^4.2.2"
     },
-    "peerDependencies": {
-        "@opaquejs/opaque": "^0.17.0"
-    },
     "scripts": {
         "test": "jest",
         "coverage": "jest --coverage",
