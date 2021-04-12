@@ -180,5 +180,40 @@ export class Querying {
       { title: "a", createdAt: "2021-03-09T22:28:29.954Z" },
       { title: "a", createdAt: "2022-03-09T22:28:29.954Z" },
     ]);
+
+    // Ordering with empty values: title asc
+    expect(
+      this.engine.queryCollection([{ title: "a" }, { title: "b" }, { title: null }], {
+        _orderBy: [{ key: "title", direction: "asc" }],
+      })
+    ).toEqual([{ title: null }, { title: "a" }, { title: "b" }]);
+    expect(
+      this.engine.queryCollection([{ title: "a" }, { title: "b" }, { title: undefined }], {
+        _orderBy: [{ key: "title", direction: "asc" }],
+      })
+    ).toEqual([{ title: undefined }, { title: "a" }, { title: "b" }]);
+  }
+
+  correctEmptyHandling() {
+    const comparator = new Comparator();
+
+    // Booleans
+    expect(comparator.compare(null, "<", false)).toBe(true);
+    expect(comparator.compare(null, "<", true)).toBe(true);
+    expect(comparator.compare(null, ">", false)).toBe(false);
+    expect(comparator.compare(null, ">", true)).toBe(false);
+    expect(comparator.compare(null, "==", false)).toBe(false);
+    expect(comparator.compare(null, "==", true)).toBe(false);
+
+    // numbers
+    expect(comparator.compare(null, "<", -1000)).toBe(true);
+    expect(comparator.compare(null, ">", -1000)).toBe(false);
+    expect(comparator.compare(null, "==", -1000)).toBe(false);
+
+    // strings
+    expect(comparator.compare(null, "<", "-Infinity")).toBe(true);
+    expect(comparator.compare(null, "<", "")).toBe(true);
+    expect(comparator.compare(null, ">", "")).toBe(false);
+    expect(comparator.compare(null, "==", "")).toBe(false);
   }
 }
