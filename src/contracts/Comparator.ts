@@ -1,5 +1,5 @@
 export type Comparators = "==" | "!=" | "<" | "<=" | ">" | ">=" | "in";
 
 export interface ComparatorInterface {
-  compare(comparator: Comparators, value: unknown): boolean;
+  compare(left: unknown, comparator: Comparators, right: unknown): boolean;
 }

@@ -4,8 +4,23 @@ import { matchesQuery, queryCollection, QueryEngine } from "..";
 import { Comparator } from "../Comparator";
 import { Comparators } from "../contracts/Comparator";
 
+class DateComparator extends Comparator {
+  static parseDate(value: unknown) {
+    if (typeof value != "string") {
+      throw new Error(`A date value must be given as a string, received value [${value}] in date comparison`);
+    }
+    return new Date(value);
+  }
+
+  compare(left: unknown, comparison: Comparators, right: unknown) {
+    return super.compare(DateComparator.parseDate(left), comparison, DateComparator.parseDate(right));
+  }
+}
+
 @runAsTest()
 export class Querying {
+  public engine = new QueryEngine({ createdAt: () => new DateComparator() });
+
   matchesQuery() {
     // ==
     expect(matchesQuery({ lel: "hallo" }, { key: "lel", comparator: "==", value: "hallo" })).toBe(true);
@@ -87,45 +102,83 @@ export class Querying {
     ]);
   }
   queryWithDatetimeComparisons() {
-    class DateComparator extends Comparator<Date> {
-      constructor(left: unknown) {
-        super(DateComparator.parseDate(left));
-      }
-
-      static parseDate(value: unknown) {
-        if (typeof value != "string") {
-          throw new Error(`A date value must be given as a string, received value [${value}] in date comparison`);
-        }
-        return new Date(value);
-      }
-
-      compare(comparison: Comparators, right: unknown) {
-        return super.compare(comparison, DateComparator.parseDate(right));
-      }
-    }
-    const engine = new QueryEngine({ createdAt: (value) => new DateComparator(value) });
-
     // Works normal
-    expect(() => engine.matchesQuery({ number: 1 }, { key: "number", comparator: "==", value: 2 })).not.toThrow();
+    expect(() => this.engine.matchesQuery({ number: 1 }, { key: "number", comparator: "==", value: 2 })).not.toThrow();
 
     // wrong date input
     expect(() =>
-      engine.matchesQuery({ createdAt: {} }, { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" })
+      this.engine.matchesQuery({ createdAt: {} }, { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" })
     ).toThrow();
 
     // Correct
     expect(
-      engine.matchesQuery(
+      this.engine.matchesQuery(
         { createdAt: "2021-04-09T22:28:29.954Z" },
         { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" }
       )
     ).toBe(true);
     // Incorrect
     expect(
-      engine.matchesQuery(
+      this.engine.matchesQuery(
         { createdAt: "2021-03-09T22:28:29.954Z" },
         { key: "createdAt", comparator: ">", value: "Sat Apr 9 2021" }
       )
     ).toBe(false);
+  }
+
+  ordering() {
+    // Single
+    expect(
+      this.engine.queryCollection([{ createdAt: "2021-03-09T22:28:29.954Z" }, { createdAt: "Sat Apr 9 2021" }], {
+        _orderBy: [{ key: "createdAt", direction: "asc" }],
+      })
+    ).toEqual([{ createdAt: "2021-03-09T22:28:29.954Z" }, { createdAt: "Sat Apr 9 2021" }]);
+    expect(
+      this.engine.queryCollection([{ createdAt: "Sat Apr 9 2021" }, { createdAt: "2021-03-09T22:28:29.954Z" }], {
+        _orderBy: [{ key: "createdAt", direction: "desc" }],
+      })
+    ).toEqual([{ createdAt: "Sat Apr 9 2021" }, { createdAt: "2021-03-09T22:28:29.954Z" }]);
+
+    // Two orders: title (asc) - createdAt(asc)
+    expect(
+      this.engine.queryCollection(
+        [
+          { title: "b", createdAt: "Sat Apr 9 2021" },
+          { title: "a", createdAt: "2022-03-09T22:28:29.954Z" },
+          { title: "a", createdAt: "2021-03-09T22:28:29.954Z" },
+        ],
+        {
+          _orderBy: [
+            { key: "title", direction: "asc" },
+            { key: "createdAt", direction: "asc" },
+          ],
+        }
+      )
+    ).toEqual([
+      { title: "a", createdAt: "2021-03-09T22:28:29.954Z" },
+      { title: "a", createdAt: "2022-03-09T22:28:29.954Z" },
+      { title: "b", createdAt: "Sat Apr 9 2021" },
+    ]);
+
+    // Two orders: title (desc) - createdAt(asc)
+    expect(
+      this.engine.queryCollection(
+        [
+          { title: "a", createdAt: "2022-03-09T22:28:29.954Z" },
+          { title: "b", createdAt: "Sat Apr 9 2021" },
+          { title: "a", createdAt: "2021-03-09T22:28:29.954Z" },
+        ],
+        {
+          _orderBy: [
+            { key: "title", direction: "desc" },
+            { key: "createdAt", direction: "asc" },
+          ],
+        }
+      )
+    ).toEqual([
+      { title: "b", createdAt: "Sat Apr 9 2021" },
+      { title: "a", createdAt: "2021-03-09T22:28:29.954Z" },
+      { title: "a", createdAt: "2022-03-09T22:28:29.954Z" },
+    ]);
   }
 }

@@ -1,39 +1,49 @@
 import { ComparatorInterface, Comparators } from "./contracts/Comparator";
 
-export class Comparator<Value = unknown> implements ComparatorInterface {
-  constructor(public left: Value) {}
+export type Comparable = string | number | object | boolean;
 
-  compare(comparison: Comparators, right: Value) {
+export class Comparator implements ComparatorInterface {
+  compare(left: unknown, comparison: Comparators, right: unknown) {
+    if (!this.isValidComparable(left)) {
+      throw new Error(`The left value [${left}] is not comparable.`);
+    }
     if (comparison == "in") {
       if (!Array.isArray(right)) {
         throw new Error(
-          `Comparator: value [${right}] is not an array and it can therefore not be checked if [${this.left}] is inside of this`
+          `Comparator: value [${right}] is not an array and it can therefore not be checked if [${left}] is inside of this`
         );
       }
-      return this.in(right);
+      return this.in(left, right);
     }
-    return this[comparison](right);
+    if (!this.isValidComparable(right)) {
+      throw new Error(`The right value [${right}] is not comparable.`);
+    }
+    return this[comparison](left, right);
   }
 
-  "=="(right: Value) {
-    return this.left === right;
+  isValidComparable(value: unknown): value is string | number | object | boolean {
+    return ["string", "number", "object", "boolean"].includes(typeof value);
   }
-  "!="(right: Value) {
-    return this.left !== right;
+
+  "=="(left: Comparable, right: Comparable) {
+    return left === right;
   }
-  "<"(right: Value) {
-    return this.left < right;
+  "!="(left: Comparable, right: Comparable) {
+    return !this["=="](left, right);
   }
-  "<="(right: Value) {
-    return this.left <= right;
+  "<"(left: Comparable, right: Comparable) {
+    return left < right;
   }
-  ">"(right: Value) {
-    return this.left > right;
+  ">"(left: Comparable, right: Comparable) {
+    return left > right;
   }
-  ">="(right: Value) {
-    return this.left >= right;
+  "<="(left: Comparable, right: Comparable) {
+    return this["<"](left, right) || this["=="](left, right);
   }
-  in(right: Value[]) {
-    return right.includes(this.left);
+  ">="(left: Comparable, right: Comparable) {
+    return this[">"](left, right) || this["=="](left, right);
+  }
+  in(left: Comparable, right: Comparable[]) {
+    return right.some((value) => this["=="](value, left));
   }
 }
