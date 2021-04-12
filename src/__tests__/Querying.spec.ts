@@ -1,5 +1,5 @@
 import { NormalizedQuery } from "@opaquejs/query";
-import { runAsTest } from "@opaquejs/testing";
+import { Example, example, runAsTest } from "@opaquejs/testing";
 import { matchesQuery, queryCollection, QueryEngine } from "..";
 import { Comparator } from "../Comparator";
 import { Comparators } from "../contracts/Comparator";
@@ -194,26 +194,28 @@ export class Querying {
     ).toEqual([{ title: undefined }, { title: "a" }, { title: "b" }]);
   }
 
-  correctEmptyHandling() {
+  @example(null)
+  @example(undefined)
+  correctEmptyHandling(nullish: Example<null | undefined>) {
     const comparator = new Comparator();
 
     // Booleans
-    expect(comparator.compare(null, "<", false)).toBe(true);
-    expect(comparator.compare(null, "<", true)).toBe(true);
-    expect(comparator.compare(null, ">", false)).toBe(false);
-    expect(comparator.compare(null, ">", true)).toBe(false);
-    expect(comparator.compare(null, "==", false)).toBe(false);
-    expect(comparator.compare(null, "==", true)).toBe(false);
+    expect(comparator.compare(nullish, "<", false)).toBe(true);
+    expect(comparator.compare(nullish, "<", true)).toBe(true);
+    expect(comparator.compare(nullish, ">", false)).toBe(false);
+    expect(comparator.compare(nullish, ">", true)).toBe(false);
+    expect(comparator.compare(nullish, "==", false)).toBe(false);
+    expect(comparator.compare(nullish, "==", true)).toBe(false);
 
     // numbers
-    expect(comparator.compare(null, "<", -1000)).toBe(true);
-    expect(comparator.compare(null, ">", -1000)).toBe(false);
-    expect(comparator.compare(null, "==", -1000)).toBe(false);
+    expect(comparator.compare(nullish, "<", -1000)).toBe(true);
+    expect(comparator.compare(nullish, ">", -1000)).toBe(false);
+    expect(comparator.compare(nullish, "==", -1000)).toBe(false);
 
     // strings
-    expect(comparator.compare(null, "<", "-Infinity")).toBe(true);
-    expect(comparator.compare(null, "<", "")).toBe(true);
-    expect(comparator.compare(null, ">", "")).toBe(false);
-    expect(comparator.compare(null, "==", "")).toBe(false);
+    expect(comparator.compare(nullish, "<", "-Infinity")).toBe(true);
+    expect(comparator.compare(nullish, "<", "")).toBe(true);
+    expect(comparator.compare(nullish, ">", "")).toBe(false);
+    expect(comparator.compare(nullish, "==", "")).toBe(false);
   }
 }
