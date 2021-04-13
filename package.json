@@ -20,7 +20,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/opaquejs/query-builder.git"
+        "url": "git+https://github.com/opaquejs/query-engine.git"
     },
     "keywords": [
         "opaquejs",
@@ -34,6 +34,6 @@
     },
     "homepage": "https://github.com/opaquejs/query-builder#readme",
     "dependencies": {
-        "@opaquejs/query": "^0.2.2"
+        "@opaquejs/query": "^0.2.4"
     }
 }
