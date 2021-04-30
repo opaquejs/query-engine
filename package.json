@@ -34,6 +34,6 @@
     },
     "homepage": "https://github.com/opaquejs/query-builder#readme",
     "dependencies": {
-        "@opaquejs/query": "^0.2.4"
+        "@opaquejs/query": "^0.2.5"
     }
 }

@@ -2,7 +2,20 @@ import { ComparatorInterface, Comparators } from "./contracts/Comparator";
 export type Comparable = unknown;
 export type SafeComparable = string | number | boolean | object;
 
+export type ComparatorContext = {
+  target: string;
+  options: ComparatorOptions;
+};
+
+export type ComparatorOptions = {
+  nullOrdering: "first" | "last" | "throw";
+};
+
+export class InvalidNullComparison extends Error {}
+
 export abstract class AbstractComparator implements ComparatorInterface {
+  constructor(public context: ComparatorContext) {}
+
   compare(left: unknown, comparison: Comparators, right: unknown) {
     if (comparison == "in") {
       if (!Array.isArray(right)) {
@@ -26,7 +39,7 @@ export abstract class AbstractComparator implements ComparatorInterface {
     return this.compare(left, ">", right) || this.compare(left, "==", right);
   }
   rawin(left: Comparable, right: Comparable[]): boolean {
-    return right.some((value) => this.compare(left, "==", right));
+    return right.some((value) => this.compare(left, "==", value));
   }
   "raw!="(left: Comparable, right: Comparable): boolean {
     return !this.compare(left, "==", right);
@@ -39,25 +52,38 @@ export abstract class AbstractComparator implements ComparatorInterface {
     if (this.isEmpty(left) || this.isEmpty(right)) {
       return false;
     }
-    return left === right;
+
+    return this["=="](left, right);
   }
   "raw<"(left: Comparable, right: Comparable): boolean {
-    if ((this.isEmpty(left) && this.isEmpty(right)) || this.isEmpty(right)) {
+    if (this.context.options.nullOrdering == "throw" && (this.isEmpty(left) || this.isEmpty(right))) {
+      throw new InvalidNullComparison();
+    }
+    if (this.isEmpty(left) && this.isEmpty(right)) {
       return false;
     }
     if (this.isEmpty(left)) {
-      return true;
+      return this.context.options.nullOrdering == "first";
     }
-    return left < right;
+    if (this.isEmpty(right)) {
+      return this.context.options.nullOrdering == "last";
+    }
+    return this["<"](left, right);
   }
   "raw>"(left: Comparable, right: Comparable): boolean {
-    if ((this.isEmpty(left) && this.isEmpty(right)) || this.isEmpty(left)) {
+    if (this.context.options.nullOrdering == "throw" && (this.isEmpty(left) || this.isEmpty(right))) {
+      throw new InvalidNullComparison();
+    }
+    if (this.isEmpty(left) && this.isEmpty(right)) {
       return false;
     }
     if (this.isEmpty(right)) {
-      return true;
+      return this.context.options.nullOrdering == "first";
     }
-    return left > right;
+    if (this.isEmpty(left)) {
+      return this.context.options.nullOrdering == "last";
+    }
+    return this[">"](left, right);
   }
 
   abstract "=="(left: SafeComparable, right: SafeComparable): boolean;
