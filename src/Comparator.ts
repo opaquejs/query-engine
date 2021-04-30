@@ -11,7 +11,12 @@ export type ComparatorOptions = {
   nullOrdering: "first" | "last" | "throw";
 };
 
-export class InvalidNullComparison extends Error {}
+export class InvalidNullComparison extends Error {
+  static message: "Invalid null comparison";
+  constructor() {
+    super(InvalidNullComparison.message);
+  }
+}
 
 export abstract class AbstractComparator implements ComparatorInterface {
   constructor(public context: ComparatorContext) {}

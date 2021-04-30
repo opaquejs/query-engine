@@ -38,8 +38,8 @@ export class QueryEngine {
     if (!wrapped) {
       try {
         return this.matchesQuery(subject, query, true);
-      } catch (error) {
-        if (error instanceof InvalidNullComparison) {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message == InvalidNullComparison.message) {
           return false;
         }
         throw error;
