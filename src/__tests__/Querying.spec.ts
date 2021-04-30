@@ -19,7 +19,7 @@ class DateComparator extends Comparator {
 
 @runAsTest()
 export class Querying {
-  public engine = new QueryEngine({ createdAt: () => new DateComparator() });
+  public engine = new QueryEngine({ comparators: { createdAt: (ctx) => new DateComparator(ctx) } });
 
   matchesQuery() {
     // ==
@@ -197,7 +197,7 @@ export class Querying {
   @example(null)
   @example(undefined)
   correctEmptyHandling(nullish: Example<null | undefined>) {
-    const comparator = new Comparator();
+    const comparator = new Comparator({ target: "any", options: { nullOrdering: "first" } });
 
     // Booleans
     expect(comparator.compare(nullish, "<", false)).toBe(true);
