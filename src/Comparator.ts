@@ -12,7 +12,7 @@ export type ComparatorOptions = {
 };
 
 export class InvalidNullComparison extends Error {
-  static message: "Invalid null comparison";
+  static message = "Invalid null comparison";
   constructor() {
     super(InvalidNullComparison.message);
   }
